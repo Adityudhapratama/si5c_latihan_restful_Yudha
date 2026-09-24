@@ -11,7 +11,7 @@ let mahasiswa = [
 ];
 let nextId = 3; // penghitung id untuk data baru
 
-// route /
+// route / 
 app.get("/", (req, res) => {
   res.send("Server Express.js berjalan pada PORT 3000!");
 });
