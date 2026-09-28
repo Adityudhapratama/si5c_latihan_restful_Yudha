@@ -69,7 +69,7 @@ app.post('/mahasiswa', (req, res) => {
   res.status(201).json(baru);
 });
 
-// PUT /mahasiswa/2
+// PUT /mahasisswa/2
 // Body: { "nama": "Budi Santoso", "jurusan": "Informatika" }
 app.put('/mahasiswa/:id', (req, res) => {
   const id = parseInt(req.params.id);
