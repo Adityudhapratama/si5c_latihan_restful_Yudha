@@ -11,6 +11,22 @@ function logger(req, res, next) {
   next(); // wajib, agar request lanjut ke handler berikutnya
 }
 
+function cekApiKey(req, res, next) {
+  const apiKey = req.headers['x-api-key'];
+
+  if (apiKey !== process.env.API_KEY) {
+    return res.status(401).json({ message: 'API key tidak valid' });
+  }
+
+  next();
+}
+
+function errorHttp(status, message) {
+  const err = new Error(message);
+  err.status = status;
+  return err;
+}
+
 // Didaftarkan sebelum route agar mencatat seluruh request
 app.use(logger);
 //cors didaftarkan
@@ -34,7 +50,7 @@ app.get("/", (req, res) => {
 });
 
 // GET /mahasiswa -> seluruh data, bisa difilter: /mahasiswa?jurusan=Informatika
-app.get("/mahasiswa", (req, res) => {
+app.get("/mahasiswa", (req, res,) => {
   const { jurusan } = req.query;
 
   if (jurusan) {
@@ -46,21 +62,21 @@ app.get("/mahasiswa", (req, res) => {
 });
 
 // GET /mahasiswa/:id -> menampilkan satu data berdasarkan id
-app.get("/mahasiswa/:id", (req, res) => {
+app.get("/mahasiswa/:id", (req, res, next) => {
   const id = parseInt(req.params.id);
   const data = mahasiswa.find((m) => m.id === id);
 
-  if (!data) return res.status(404).json({ message: "Data tidak ditemukan" });
+  if (!data) return next(errorHttp(404, 'Data tidak ditemukan'));
   res.json(data);
 });
 
 // POST /mahasiswa
 // Body: { "nama": "Citra", "jurusan": "Sistem Informasi" }
-app.post('/mahasiswa', (req, res) => {
+app.post('/mahasiswa', (req, res, ext) => {
   const { nama, jurusan } = req.body;
 
   if (!nama || !jurusan) {
-    return res.status(400).json({ message: 'nama dan jurusan wajib diisi' });
+   return next(errorHttp(400, 'nama dan jurusan wajib diisi'));
   }
 
   const baru = { id: nextId++, nama, jurusan };
@@ -75,9 +91,7 @@ app.put('/mahasiswa/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const index = mahasiswa.findIndex((m) => m.id === id);
 
-  if (index === -1) {
-    return res.status(404).json({ message: 'Data tidak ditemukan' });
-  }
+  if (index === -1) return next(errorHttp(404, 'Data tidak ditemukan'));
 
   mahasiswa[index] = { ...mahasiswa[index], ...req.body, id };
   res.json(mahasiswa[index]);
@@ -95,6 +109,7 @@ app.delete('/mahasiswa/:id', (req, res) => {
 
   mahasiswa.splice(index, 1);
   res.status(204).send();
+  
 });
 
 // menjalankan aplikasi pada port 3000
